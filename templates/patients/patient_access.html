@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Patient Access | Mobile Stroke Unit{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white text-center">
+                    <h4 class="mb-0">Patient Access Portal</h4>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                    
+                    <p class="text-center mb-4">Enter your access code to view your medical information.</p>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="accessCode" class="form-label">Access Code</label>
+                            <input type="text" class="form-control form-control-lg text-center" 
+                                   id="accessCode" name="access_code" 
+                                   placeholder="Enter 8-digit code" maxlength="8" required>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-key me-2"></i> Access Records
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-center">
+                    <p class="mb-0 small">Need help? Please contact your healthcare provider.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

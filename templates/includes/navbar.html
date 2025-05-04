@@ -1,0 +1,58 @@
+<!-- This is a partial example of your nav bar - adjust according to your existing structure -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+        <a class="navbar-brand" href="{% url 'home' %}">Mobile Stroke Unit</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="{% url 'home' %}">Home</a>
+                </li>
+                {% if user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if '/patients/' in request.path %}active{% endif %}" href="{% url 'patients:list' %}">Patients</a>
+                    </li>
+                    
+                    <!-- Special menu items for neurologists/doctors -->
+                    {% if user.role == 'NEUROLOGIST' or user.is_neurologist or user.is_superuser %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if '/assessments/nihss/list/' in request.path %}active{% endif %}" href="{% url 'assessments:nihss_list' %}">NIHSS Assessments</a>
+                        </li>
+                    {% endif %}
+                    
+                    <!-- Special menu items for technicians -->
+                    {% if user.role == 'TECHNICIAN' or user.is_technician or user.is_superuser %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if '/patients/register/' in request.path %}active{% endif %}" href="{% url 'patients:register' %}">Register Patient</a>
+                        </li>
+                    {% endif %}
+                    {% if user.role == 'NEUROLOGIST' or user.is_neurologist or user.is_superuser %}
+    <li class="nav-item">
+        <a class="nav-link {% if '/assessments/doctor/dashboard/' in request.path %}active{% endif %}" href="{% url 'assessments:doctor_dashboard' %}">Doctor Dashboard</a>
+    </li>
+{% endif %}
+                {% endif %}
+            </ul>
+            <ul class="navbar-nav">
+                {% if user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user-circle me-2"></i>{{ user.get_full_name|default:user.username }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                            <li><a class="dropdown-item" href="#">Profile</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'logout' %}">Logout</a></li>
+                        </ul>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'login' %}">Login</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>

@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}Patients | Mobile Stroke Unit{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Patients</h1>
+    
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+            <li class="breadcrumb-item active">Patients</li>
+        </ol>
+    </nav>
+    
+    <div class="d-flex justify-content-between mb-4">
+        <div>
+            <form class="d-flex" method="get">
+                <input type="text" name="q" class="form-control me-2" placeholder="Search patients..." value="{{ request.GET.q|default:'' }}">
+                <button type="submit" class="btn btn-outline-primary">Search</button>
+            </form>
+        </div>
+        {% if user.role == 'TECHNICIAN' or user.is_technician %}
+            <a href="{% url 'patients:register_patient' %}" class="btn btn-primary">
+                <i class="fas fa-plus-circle me-2"></i>New Patient
+            </a>
+        {% endif %}
+    </div>
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+        <!-- Add this section after the messages loop to show the search query -->
+        {% if search_query %}
+            <div class="alert alert-info alert-dismissible fade show">
+                <p class="mb-0">Search results for: <strong>{{ search_query }}</strong></p>
+                <a href="{% url 'patients:list' %}" class="btn btn-sm btn-outline-primary mt-2">Clear search</a>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endif %}
+    {% endif %}
+    
+    {% if consultation_mode %}
+    <div class="alert alert-info alert-dismissible fade show">
+        <h5 class="alert-heading"><i class="fas fa-stethoscope me-2"></i>Consultation Mode</h5>
+        <p class="mb-0">Select a patient below to request a neurologist consultation.</p>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+    
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Patient List</h5>
+        </div>
+        <div class="card-body">
+            {% if patients %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Date of Birth</th>
+                                <th>Gender</th>
+                                <th>Phone</th>
+                                <th>Registered On</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for patient in patients %}
+                                <tr>
+                                    <td>{{ patient.id }}</td>
+                                    <td>{{ patient.first_name }} {{ patient.last_name }}</td>
+                                    <td>{{ patient.date_of_birth }}</td>
+                                    <td>{{ patient.get_gender_display }}</td>
+                                    <td>{{ patient.phone_number }}</td>
+                                    <td>{{ patient.created_at|date:"M d, Y" }}</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{% url 'patients:detail' patient_id=patient.id %}" class="btn btn-sm btn-outline-primary">View</a>
+                                            {% if user.role == 'TECHNICIAN' or user.is_technician %}
+                                                <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#consultationModal{{ patient.id }}">
+                                                    Consult
+                                                </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Consultation Modal for this patient -->
+                                <div class="modal fade" id="consultationModal{{ patient.id }}" tabindex="-1" aria-labelledby="consultationModalLabel{{ patient.id }}" aria-hidden="true">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header bg-warning">
+                                                <h5 class="modal-title" id="consultationModalLabel{{ patient.id }}">
+                                                    <i class="fas fa-stethoscope me-2"></i>Request Neurologist Consultation
+                                                </h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <form method="post" action="{% url 'consultations:request_consultation' patient_id=patient.id %}">
+                                                {% csrf_token %}
+                                                <div class="modal-body">
+                                                    <div class="row mb-4">
+                                                        <div class="col-md-6">
+                                                            <h6>Patient Information:</h6>
+                                                            <ul class="list-unstyled">
+                                                                <li><strong>Name:</strong> {{ patient.first_name }} {{ patient.last_name }}</li>
+                                                                <li><strong>DOB:</strong> {{ patient.date_of_birth }}</li>
+                                                                <li><strong>Gender:</strong> {{ patient.get_gender_display }}</li>
+                                                                <li><strong>ID:</strong> {{ patient.id }}</li>
+                                                            </ul>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <h6>Medical History:</h6>
+                                                            <p class="small text-muted border p-2 rounded" style="height: 100px; overflow-y: auto;">
+                                                                {{ patient.medical_history|default:"No medical history recorded."|linebreaksbr }}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="mb-3">
+                                                        <label for="chief_complaint{{ patient.id }}" class="form-label">Chief Complaint <span class="text-danger">*</span></label>
+                                                        <textarea class="form-control" id="chief_complaint{{ patient.id }}" name="chief_complaint" rows="3" required></textarea>
+                                                        <div class="form-text">Enter the primary reason for requesting neurologist consultation</div>
+                                                    </div>
+                                                    
+                                                    <div class="mb-3">
+                                                        <label for="notes{{ patient.id }}" class="form-label">Additional Notes</label>
+                                                        <textarea class="form-control" id="notes{{ patient.id }}" name="notes" rows="5"></textarea>
+                                                        <div class="form-text">Include relevant clinical findings, vital signs, or recent assessment results</div>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="btn btn-warning">
+                                                        <i class="fas fa-paper-plane me-1"></i> Submit Consultation Request
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                    <p class="lead text-muted">No patients found.</p>
+                    {% if user.role == 'TECHNICIAN' or user.is_technician %}
+                        <p>Register your first patient to get started.</p>
+                        <a href="{% url 'patients:register_patient' %}" class="btn btn-primary">
+                            Register New Patient
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

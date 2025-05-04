@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Neurologist Dashboard | Mobile Stroke Unit{% endblock %}
+
+{% block sidebar_content %}
+<div class="list-group">
+    <a href="{% url 'consultations:neurologist_dashboard' %}" class="list-group-item list-group-item-action active">
+        <i class="fas fa-chart-line me-2"></i>Dashboard
+    </a>
+    <a href="{% url 'patients:list' %}" class="list-group-item list-group-item-action">
+        <i class="fas fa-users me-2"></i>Patient List
+    </a>
+    <a href="{% url 'consultations:notifications' %}" class="list-group-item list-group-item-action">
+        <i class="fas fa-bell me-2"></i>Notifications
+    </a>
+    <a href="{% url 'accounts:profile' %}" class="list-group-item list-group-item-action">
+        <i class="fas fa-user me-2"></i>My Profile
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Neurologist Dashboard</h1>
+
+<div class="alert alert-info">
+    <h5 class="alert-heading">Welcome, Dr. {{ user.get_full_name|default:user.username }}!</h5>
+    <p>Here you can review consultation requests, provide diagnoses, and approve or deny tPA requests.</p>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-warning text-white">
+                <h5 class="mb-0">Pending Consultations</h5>
+            </div>
+            <div class="card-body">
+                {% if pending_consultations %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Patient</th>
+                                    <th>Requested By</th>
+                                    <th>Requested At</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for consultation in pending_consultations %}
+                                    <tr>
+                                        <td>{{ consultation.patient.get_full_name }}</td>
+                                        <td>{{ consultation.requested_by.get_full_name }}</td>
+                                        <td>{{ consultation.requested_at|date:"M d, Y" }}</td>
+                                        <td>
+                                            <a href="{% url 'consultations:detail' consultation_id=consultation.id %}" class="btn btn-sm btn-warning">
+                                                Review
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p>No pending consultations at the moment.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">My Active Consultations</h5>
+            </div>
+            <div class="card-body">
+                {% if active_consultations %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Patient</th>
+                                    <th>Started At</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for consultation in active_consultations %}
+                                    <tr>
+                                        <td>{{ consultation.patient.get_full_name }}</td>
+                                        <td>{{ consultation.started_at|date:"M d, Y" }}</td>
+                                        <td>
+                                            <a href="{% url 'consultations:detail' consultation_id=consultation.id %}" class="btn btn-sm btn-outline-primary">
+                                                Continue
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p>No active consultations at the moment.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">Pending tPA Requests</h5>
+            </div>
+            <div class="card-body">
+                {% if pending_tpa_requests %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Patient</th>
+                                    <th>Requested By</th>
+                                    <th>Requested At</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for tpa in pending_tpa_requests %}
+                                    <tr>
+                                        <td>{{ tpa.consultation.patient.get_full_name }}</td>
+                                        <td>{{ tpa.requested_by.get_full_name }}</td>
+                                        <td>{{ tpa.requested_at|date:"M d, Y" }}</td>
+                                        <td>
+                                            <a href="{% url 'consultations:review_tpa' tpa_id=tpa.id %}" class="btn btn-sm btn-danger">
+                                                Review Request
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p>No pending tPA requests at the moment.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

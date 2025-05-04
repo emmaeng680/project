@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Doctor Dashboard | Mobile Stroke Unit{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.css" rel="stylesheet">
+<style>
+    .stats-card {
+        border-left: 4px solid;
+        transition: transform 0.2s;
+    }
+    .stats-card:hover {
+        transform: translateY(-5px);
+    }
+    .stats-primary { border-color: #4e73df; }
+    .stats-success { border-color: #1cc88a; }
+    .stats-warning { border-color: #f6c23e; }
+    .stats-danger { border-color: #e74a3b; }
+    .stats-icon {
+        opacity: 0.3;
+        font-size: 2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Doctor Dashboard</h1>
+    
+    <div class="row">
+        <!-- Total Assessments Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-0 shadow h-100 py-2 stats-card stats-primary">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total NIHSS Assessments</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_assessments }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-stethoscope stats-icon text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- My Assessments Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-0 shadow h-100 py-2 stats-card stats-success">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                My Assessments</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ doctor_assessments }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-md stats-icon text-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Today's Assessments Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-0 shadow h-100 py-2 stats-card stats-info">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Today's Assessments</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ assessments_today }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar-day stats-icon text-info"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Severe Cases Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-0 shadow h-100 py-2 stats-card stats-danger">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                Severe Cases</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ severity_counts.severe }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exclamation-triangle stats-icon text-danger"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Severity Distribution Chart -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-warning">
+                    <h6 class="m-0 font-weight-bold">NIHSS Severity Distribution</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="severityChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Daily Assessments Chart -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-info text-white">
+                    <h6 class="m-0 font-weight-bold">Daily Assessments (Last 7 Days)</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="dailyChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Recent Assessments -->
+        <div class="col-12 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold">Recent NIHSS Assessments</h6>
+                    <a href="{% url 'assessments:nihss_list' %}" class="btn btn-sm btn-outline-light">View All</a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date/Time</th>
+                                    <th>Patient</th>
+                                    <th>Score</th>
+                                    <th>Severity</th>
+                                    <th>Assessor</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for assessment in recent_assessments %}
+                                    <tr>
+                                        <td>{{ assessment.assessed_at|date:"M d, Y H:i" }}</td>
+                                        <td>
+                                            <a href="{% url 'patients:detail' assessment.patient.id %}">
+                                                {{ assessment.patient.first_name }} {{ assessment.patient.last_name }}
+                                            </a>
+                                        </td>
+                                        <td>{{ assessment.get_total_score }}</td>
+                                        <td>
+                                            {% with score=assessment.get_total_score %}
+                                                {% if score <= 4 %}
+                                                    <span class="badge bg-success">Minor</span>
+                                                {% elif score <= 15 %}
+                                                    <span class="badge bg-warning">Moderate</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">Severe</span>
+                                                {% endif %}
+                                            {% endwith %}
+                                        </td>
+                                        <td>{{ assessment.assessed_by.get_full_name|default:assessment.assessed_by.username }}</td>
+                                        <td>
+                                            <a href="{% url 'assessments:nihss_detail' assessment.id %}" class="btn btn-sm btn-outline-primary">View</a>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="text-center">No assessments recorded yet</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+<script>
+    // Severity Distribution Chart
+    var severityCtx = document.getElementById('severityChart').getContext('2d');
+    var severityChart = new Chart(severityCtx, {
+        type: 'pie',
+        data: {
+            labels: ['Minor (0-4)', 'Moderate (5-15)', 'Severe (>15)'],
+            datasets: [{
+                data: [
+                    {{ severity_counts.minor }},
+                    {{ severity_counts.moderate }},
+                    {{ severity_counts.severe }}
+                ],
+                backgroundColor: ['#1cc88a', '#f6c23e', '#e74a3b'],
+                hoverBackgroundColor: ['#17a673', '#dda20a', '#be2617'],
+                hoverBorderColor: "rgba(234, 236, 244, 1)",
+            }],
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                }
+            }
+        }
+    });
+    
+    // Daily Assessments Chart
+    var dailyCtx = document.getElementById('dailyChart').getContext('2d');
+    var dailyChart = new Chart(dailyCtx, {
+        type: 'bar',
+        data: {
+            labels: [
+                {% for item in daily_assessments %}
+                    '{{ item.day }}',
+                {% endfor %}
+            ],
+            datasets: [{
+                label: 'Number of Assessments',
+                data: [
+                    {% for item in daily_assessments %}
+                        {{ item.count }},
+                    {% endfor %}
+                ],
+                backgroundColor: '#36b9cc',
+                borderColor: '#2c9faf',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    precision: 0
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

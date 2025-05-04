@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+
+{% block title %}Patient Dashboard | Mobile Stroke Unit{% endblock %}
+
+{% block sidebar_content %}
+<div class="list-group">
+    <a href="{% url 'patients:dashboard' %}" class="list-group-item list-group-item-action active">
+        <i class="fas fa-chart-line me-2"></i>Dashboard
+    </a>
+    <a href="{% url 'consultations:notifications' %}" class="list-group-item list-group-item-action">
+        <i class="fas fa-bell me-2"></i>Notifications
+    </a>
+    <a href="{% url 'accounts:profile' %}" class="list-group-item list-group-item-action">
+        <i class="fas fa-user me-2"></i>My Profile
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Patient Dashboard</h1>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+
+{% if request.session.patient_access_verified %}
+    <!-- PATIENT DASHBOARD CONTENT WHEN VERIFIED -->
+    <div class="alert alert-success">
+        <h5 class="alert-heading">Welcome, {{ patient.first_name }} {{ patient.last_name }}!</h5>
+        <p>This is your patient dashboard where you can track your medical information and consultation history.</p>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Personal Information</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Name:</strong> {{ patient.first_name }} {{ patient.last_name }}</p>
+                    <p><strong>Date of Birth:</strong> {{ patient.date_of_birth|date:"F j, Y" }}</p>
+                    <p><strong>Gender:</strong> {{ patient.get_gender_display }}</p>
+                    <p><strong>Phone Number:</strong> {{ patient.phone_number }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Medical History</h5>
+                </div>
+                <div class="card-body">
+                    {{ patient.medical_history|linebreaks|default:"No medical history recorded." }}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if consultations %}
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">Recent Consultations</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Chief Complaint</th>
+                            <th>Status</th>
+                            <th>Neurologist</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for consultation in consultations %}
+                        <tr>
+                            <td>{{ consultation.requested_at|date:"M d, Y" }}</td>
+                            <td>{{ consultation.chief_complaint }}</td>
+                            <td>
+                                {% if consultation.status == "REQUESTED" %}
+                                <span class="badge bg-warning">Requested</span>
+                                {% elif consultation.status == "IN_PROGRESS" %}
+                                <span class="badge bg-primary">In Progress</span>
+                                {% elif consultation.status == "COMPLETED" %}
+                                <span class="badge bg-success">Completed</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ consultation.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ consultation.neurologist.get_full_name|default:"Not assigned" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if assessments %}
+    <div class="card mb-4">
+        <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0">NIHSS Assessments</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Score</th>
+                            <th>Assessed By</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for assessment in assessments %}
+                        <tr>
+                            <td>{{ assessment.assessed_at|date:"M d, Y" }}</td>
+                            <td>{{ assessment.get_total_score }}</td>
+                            <td>{{ assessment.assessed_by.get_full_name }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if vital_signs %}
+    <div class="card mb-4">
+        <div class="card-header bg-danger text-white">
+            <h5 class="mb-0">Vital Signs</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>BP</th>
+                            <th>Heart Rate</th>
+                            <th>Temp</th>
+                            <th>O2 Sat</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for vs in vital_signs %}
+                        <tr>
+                            <td>{{ vs.recorded_at|date:"M d, Y" }}</td>
+                            <td>{{ vs.blood_pressure_systolic }}/{{ vs.blood_pressure_diastolic }}</td>
+                            <td>{{ vs.heart_rate }} bpm</td>
+                            <td>{{ vs.temperature }} °C</td>
+                            <td>{{ vs.oxygen_saturation }}%</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <div class="text-center mt-4">
+        <a href="{% url 'patients:patient_logout' %}" class="btn btn-outline-danger">
+            <i class="fas fa-sign-out-alt me-2"></i> Sign Out
+        </a>
+    </div>
+{% else %}
+    <!-- ACCESS CODE FORM WHEN NOT VERIFIED -->
+    <div class="alert alert-info">
+        <p>This is your patient dashboard where you can track your medical information and consultation history.</p>
+    </div>
+
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white text-center">
+                        <h4 class="mb-0">Patient Access Portal</h4>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-center mb-4">Enter your access code to view your medical information.</p>
+                        
+                        <form method="post" action="{% url 'patients:patient_access' %}">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label for="accessCode" class="form-label">Access Code</label>
+                                <input type="text" class="form-control form-control-lg text-center" 
+                                       id="accessCode" name="access_code" 
+                                       placeholder="Enter 8-digit code" maxlength="8" required>
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-key me-2"></i> Access Records
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="card-footer text-center">
+                        <p class="mb-0 small">Need help? Please contact your healthcare provider.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

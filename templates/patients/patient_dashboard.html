@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+{% block title %}My Health Dashboard | Mobile Stroke Unit{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>My Health Dashboard</h1>
+        <a href="{% url 'patients:patient_logout' %}" class="btn btn-outline-danger">
+            <i class="fas fa-sign-out-alt me-2"></i> Log Out
+        </a>
+    </div>
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+    
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Personal Information</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Name:</strong> {{ patient.first_name }} {{ patient.last_name }}</p>
+                    <p><strong>Date of Birth:</strong> {{ patient.date_of_birth|date:"F j, Y" }}</p>
+                    <p><strong>MRN:</strong> {{ patient.mrn }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Gender:</strong> {{ patient.get_gender_display }}</p>
+                    <p><strong>Contact:</strong> {{ patient.phone_number }}</p>
+                    <p><strong>Emergency Contact:</strong> {{ patient.emergency_contact_name }} ({{ patient.emergency_contact_phone }})</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Recent Consultations</h5>
+                </div>
+                <div class="card-body">
+                    {% if consultations %}
+                        <div class="list-group">
+                            {% for consultation in consultations|slice:":5" %}
+                                <div class="list-group-item list-group-item-action flex-column align-items-start">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h5 class="mb-1">{{ consultation.chief_complaint }}</h5>
+                                        <small>{{ consultation.requested_at|date:"M d, Y" }}</small>
+                                    </div>
+                                    
+                                    <p class="mb-1">Status: 
+                                        {% if consultation.status == 'REQUESTED' %}
+                                            <span class="badge bg-warning">Requested</span>
+                                        {% elif consultation.status == 'IN_PROGRESS' %}
+                                            <span class="badge bg-primary">In Progress</span>
+                                        {% elif consultation.status == 'COMPLETED' %}
+                                            <span class="badge bg-success">Completed</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ consultation.get_status_display }}</span>
+                                        {% endif %}
+                                    </p>
+                                    
+                                    {% if consultation.neurologist %}
+                                        <small>Neurologist: {{ consultation.neurologist.get_full_name }}</small>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                        {% if consultations.count > 5 %}
+                            <div class="mt-3 text-center">
+                                <button class="btn btn-outline-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#moreConsultations">
+                                    View More Consultations
+                                </button>
+                            </div>
+                            <div class="collapse mt-3" id="moreConsultations">
+                                <div class="list-group">
+                                    {% for consultation in consultations|slice:"5:" %}
+                                        <div class="list-group-item list-group-item-action flex-column align-items-start">
+                                            <div class="d-flex w-100 justify-content-between">
+                                                <h5 class="mb-1">{{ consultation.chief_complaint }}</h5>
+                                                <small>{{ consultation.requested_at|date:"M d, Y" }}</small>
+                                            </div>
+                                            <p class="mb-1">Status: 
+                                                {% if consultation.status == 'REQUESTED' %}
+                                                    <span class="badge bg-warning">Requested</span>
+                                                {% elif consultation.status == 'IN_PROGRESS' %}
+                                                    <span class="badge bg-primary">In Progress</span>
+                                                {% elif consultation.status == 'COMPLETED' %}
+                                                    <span class="badge bg-success">Completed</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">{{ consultation.get_status_display }}</span>
+                                                {% endif %}
+                                            </p>
+                                            {% if consultation.neurologist %}
+                                                <small>Neurologist: {{ consultation.neurologist.get_full_name }}</small>
+                                            {% endif %}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <p class="text-center py-3">No consultations found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Stroke Assessments</h5>
+                </div>
+                <div class="card-body">
+                    {% if assessments %}
+                        <div class="list-group">
+                            {% for assessment in assessments %}
+                                <div class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h5 class="mb-1">Assessment #{{ assessment.id }}</h5>
+                                        <small>{{ assessment.created_at|date:"M d, Y" }}</small>
+                                    </div>
+                                    <p class="mb-1">
+                                        NIHSS Score: <strong>{{ assessment.nihss_score }}</strong>
+                                        {% if assessment.nihss_score < 5 %}
+                                            <span class="badge bg-success">Minor Stroke</span>
+                                        {% elif assessment.nihss_score < 16 %}
+                                            <span class="badge bg-warning">Moderate Stroke</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Major Stroke</span>
+                                        {% endif %}
+                                    </p>
+                                    <small>Administered by: {{ assessment.administered_by.get_full_name }}</small>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-center py-3">No assessments found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if consultation_notes %}
+    <div class="card mb-4">
+        <div class="card-header bg-warning">
+            <h5 class="mb-0">Recent Consultation Notes</h5>
+        </div>
+        <div class="card-body">
+            {% for note in consultation_notes %}
+                <div class="mb-4">
+                    <h5>{{ note.consultation.chief_complaint }}</h5>
+                    <p class="text-muted">Date: {{ note.created_at|date:"M d, Y" }} | 
+                       Dr. {{ note.consultation.neurologist.last_name }}</p>
+                    <div class="card">
+                        <div class="card-body bg-light">
+                            {{ note.notes|linebreaks }}
+                        </div>
+                    </div>
+                </div>
+                {% if not forloop.last %}<hr>{% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if tpa_requests %}
+    <div class="card mb-4">
+        <div class="card-header bg-danger text-white">
+            <h5 class="mb-0">tPA Treatment History</h5>
+        </div>
+        <div class="card-body">
+            {% for tpa in tpa_requests %}
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between">
+                            <span>{{ tpa.requested_at|date:"M d, Y H:i" }}</span>
+                            <span>
+                                {% if tpa.status == 'REQUESTED' %}
+                                    <span class="badge bg-warning">Pending</span>
+                                {% elif tpa.status == 'APPROVED' %}
+                                    <span class="badge bg-success">Approved</span>
+                                {% elif tpa.status == 'DENIED' %}
+                                    <span class="badge bg-danger">Denied</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Requested by:</strong> {{ tpa.requested_by.get_full_name }}</p>
+                        
+                        {% if tpa.reviewed_by %}
+                        <p><strong>Reviewed by:</strong> {{ tpa.reviewed_by.get_full_name }}</p>
+                        {% endif %}
+                        
+                        {% if tpa.administered %}
+                        <div class="alert alert-success">
+                            <strong>tPA was administered</strong> on {{ tpa.administered_at|date:"M d, Y H:i" }}
+                        </div>
+                        {% endif %}
+                        
+                        {% if tpa.review_notes %}
+                        <hr>
+                        <h6>Review Notes:</h6>
+                        <p>{{ tpa.review_notes }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

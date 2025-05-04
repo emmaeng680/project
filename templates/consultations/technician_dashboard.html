@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+
+{% block title %}Technician Dashboard | Mobile Stroke Unit{% endblock %}
+
+{% block sidebar_content %}
+<div class="list-group">
+    <a href="{% url 'consultations:technician_dashboard' %}" class="list-group-item list-group-item-action active">
+        <i class="fas fa-chart-line me-2"></i>Dashboard
+    </a>
+    <a href="{% url 'patients:list' %}" class="list-group-item list-group-item-action">
+        <i class="fas fa-users me-2"></i>Patient List
+    </a>
+    <a href="{% url 'patients:register_patient' %}" class="list-group-item list-group-item-action">
+        <i class="fas fa-user-plus me-2"></i>New Patient
+    </a>
+    <a href="{% url 'consultations:notifications' %}" class="list-group-item list-group-item-action">
+        <i class="fas fa-bell me-2"></i>Notifications
+    </a>
+    <a href="{% url 'accounts:profile' %}" class="list-group-item list-group-item-action">
+        <i class="fas fa-user me-2"></i>My Profile
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Technician Dashboard</h1>
+
+<div class="alert alert-info">
+    <h5 class="alert-heading">Welcome, {{ user.get_full_name|default:user.username }}!</h5>
+    <p>Here you can manage patients, request consultations, and monitor stroke assessments.</p>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <i class="fas fa-users fa-3x text-primary mb-3"></i>
+                <h5 class="card-title">Manage Patients</h5>
+                <p class="card-text">Register new patients and view patient records</p>
+                <a href="{% url 'patients:list' %}" class="btn btn-primary">Patient List</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <i class="fas fa-user-plus fa-3x text-success mb-3"></i>
+                <h5 class="card-title">New Patient</h5>
+                <p class="card-text">Register a new patient in the system</p>
+                <a href="{% url 'patients:register_patient' %}" class="btn btn-success">Register</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <i class="fas fa-bell fa-3x text-warning mb-3"></i>
+                <h5 class="card-title">Notifications</h5>
+                <p class="card-text">View your system notifications</p>
+                <a href="{% url 'consultations:notifications' %}" class="btn btn-warning">View</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Active Consultations</h5>
+                <a href="{% url 'patients:list' %}?action=consultation" class="btn btn-sm btn-light">
+                    <i class="fas fa-plus-circle me-1"></i> Create Consultation
+                </a>
+            </div>
+            <div class="card-body">
+                {% if active_consultations %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Patient</th>
+                                    <th>Requested</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for consultation in active_consultations %}
+                                    <tr>
+                                        <td>{{ consultation.patient.get_full_name }}</td>
+                                        <td>{{ consultation.requested_at|date:"M d, Y" }}</td>
+                                        <td>
+                                            {% if consultation.status == 'REQUESTED' %}
+                                                <span class="badge bg-warning">Requested</span>
+                                            {% elif consultation.status == 'IN_PROGRESS' %}
+                                                <span class="badge bg-primary">In Progress</span>
+                                            {% elif consultation.status == 'COMPLETED' %}
+                                                <span class="badge bg-success">Completed</span>
+                                            {% elif consultation.status == 'CANCELLED' %}
+                                                <span class="badge bg-secondary">Cancelled</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'consultations:detail' consultation_id=consultation.id %}" class="btn btn-sm btn-outline-primary">
+                                                View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <p class="mb-3">No active consultations at the moment.</p>
+                        <a href="{% url 'patients:list' %}?action=consultation" class="btn btn-primary">
+                            <i class="fas fa-plus-circle me-1"></i> Create New Consultation
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Recent Patients</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_patients %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Registered</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for patient in recent_patients %}
+                                    <tr>
+                                        <td>{{ patient.get_full_name }}</td>
+                                        <td>{{ patient.registration_date|date:"M d, Y" }}</td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <a href="{% url 'patients:detail' patient_id=patient.id %}" class="btn btn-sm btn-outline-primary">
+                                                    View
+                                                </a>
+                                                <a href="{% url 'consultations:request_consultation' patient_id=patient.id %}" class="btn btn-sm btn-outline-warning">
+                                                    Consult
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p>No patients registered yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">Pending tPA Requests</h5>
+            </div>
+            <div class="card-body">
+                {% if pending_tpa_requests %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Patient</th>
+                                    <th>Requested</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for tpa in pending_tpa_requests %}
+                                    <tr>
+                                        <td>{{ tpa.consultation.patient.get_full_name }}</td>
+                                        <td>{{ tpa.requested_at|date:"M d, Y" }}</td>
+                                        <td>
+                                            <span class="badge bg-warning">Requested</span>
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'consultations:detail' consultation_id=tpa.consultation.id %}" class="btn btn-sm btn-outline-primary">
+                                                View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p>No pending tPA requests at the moment.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

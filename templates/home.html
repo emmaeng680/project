@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Home | Mobile Stroke Unit{% endblock %}
+
+{% block content_full %}
+<div class="container">
+    <div class="row justify-content-center text-center mt-5">
+        <div class="col-md-8">
+            <h1 class="display-4">Mobile Stroke Unit System</h1>
+            <p class="lead">A comprehensive solution for streamlining stroke patient care, consultation, and treatment.</p>
+            
+            {% if user.is_authenticated %}
+                <div class="mt-5">
+                    <h2>Welcome, {{ user.get_full_name|default:user.username }}!</h2>
+                    <p>Please proceed to your dashboard to continue:</p>
+                    
+                    {% if user.is_patient %}
+                        <a href="{% url 'patients:patient_dashboard' %}" class="btn btn-primary btn-lg">
+                            Go to Patient Dashboard
+                        </a>
+                    {% elif user.is_technician %}
+                        <a href="{% url 'consultations:technician_dashboard' %}" class="btn btn-primary btn-lg">
+                            Go to Technician Dashboard
+                        </a>
+                    {% elif user.is_neurologist %}
+                        <a href="{% url 'consultations:neurologist_dashboard' %}" class="btn btn-primary btn-lg">
+                            Go to Neurologist Dashboard
+                        </a>
+                    {% endif %}
+                </div>
+            {% else %}
+                <div class="mt-5">
+                    <p>Please login or register to access the system:</p>
+                    <div class="d-grid gap-3 d-sm-flex justify-content-sm-center">
+                        <a href="{% url 'login' %}" class="btn btn-primary btn-lg px-4 gap-3">Login</a>
+                        <a href="{% url 'accounts:register' %}" class="btn btn-outline-primary btn-lg px-4">Register</a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="row mt-5">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-user-md fa-3x text-primary mb-3"></i>
+                    <h3>For Neurologists</h3>
+                    <p>Review patient cases remotely, provide expert consultation, and approve tPA administration.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-ambulance fa-3x text-danger mb-3"></i>
+                    <h3>For Technicians</h3>
+                    <p>Efficiently record patient data, vital signs, and request remote neurologist consultations.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-user fa-3x text-success mb-3"></i>
+                    <h3>For Patients</h3>
+                    <p>Access your medical records, consultation history, and treatment information.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Add somewhere in your homepage -->
+<div class="col-md-4">
+    <div class="card text-center h-100">
+        <div class="card-body">
+            <i class="fas fa-user-circle fa-3x text-success mb-3"></i>
+            <h5 class="card-title">Patient Portal</h5>
+            <p class="card-text">Access your medical records using your patient code</p>
+            <a href="{% url 'patients:patient_access' %}" class="btn btn-success">Patient Access</a>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}

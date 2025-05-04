@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Request Consultation | Mobile Stroke Unit{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Request Neurologist Consultation</h1>
+    
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'patients:list' %}">Patients</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'patients:detail' patient.id %}">{{ patient.first_name }} {{ patient.last_name }}</a></li>
+            <li class="breadcrumb-item active">Request Consultation</li>
+        </ol>
+    </nav>
+    
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Patient Information</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Name:</strong> {{ patient.first_name }} {{ patient.last_name }}</p>
+                    <p><strong>DOB:</strong> {{ patient.date_of_birth|date:"M d, Y" }}</p>
+                    <p><strong>Gender:</strong> {{ patient.get_gender_display }}</p>
+                    <hr>
+                    <p><strong>Medical History:</strong></p>
+                    <p class="text-muted">{{ patient.medical_history|linebreaksbr|default:"None provided" }}</p>
+                    <p><strong>Current Medications:</strong></p>
+                    <p class="text-muted">{{ patient.current_medications|linebreaksbr|default:"None provided" }}</p>
+                    <p><strong>Allergies:</strong></p>
+                    <p class="text-muted">{{ patient.allergies|linebreaksbr|default:"None" }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0">Consultation Request</h5>
+                </div>
+                <div class="card-body">
+                    <p class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        This request will be sent to available neurologists for review.
+                    </p>
+                    
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            {{ form.chief_complaint|as_crispy_field }}
+                        </div>
+                        
+                        <div class="mb-4">
+                            {{ form.notes|as_crispy_field }}
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'patients:detail' patient.id %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Request Consultation</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

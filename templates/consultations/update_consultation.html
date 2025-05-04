@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Update Consultation | Mobile Stroke Unit{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Update Consultation</h1>
+    
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'consultations:list' %}">Consultations</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'consultations:detail' consultation.id %}">Consultation #{{ consultation.id }}</a></li>
+            <li class="breadcrumb-item active">Update</li>
+        </ol>
+    </nav>
+    
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Patient Information</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Name:</strong> {{ patient.first_name }} {{ patient.last_name }}</p>
+                    <p><strong>DOB:</strong> {{ patient.date_of_birth|date:"M d, Y" }}</p>
+                    <p><strong>Gender:</strong> {{ patient.get_gender_display }}</p>
+                    <hr>
+                    <p><strong>Chief Complaint:</strong></p>
+                    <p class="text-muted">{{ consultation.chief_complaint }}</p>
+                    <hr>
+                    <p><strong>Consultation Notes:</strong></p>
+                    <p class="text-muted">{{ consultation.notes|default:"No notes provided."|linebreaksbr }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <ul class="nav nav-tabs mb-4" id="consultationTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="update-tab" data-bs-toggle="tab" data-bs-target="#update-tab-pane" type="button" role="tab" aria-controls="update-tab-pane" aria-selected="true">Update Status</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="complete-tab" data-bs-toggle="tab" data-bs-target="#complete-tab-pane" type="button" role="tab" aria-controls="complete-tab-pane" aria-selected="false">Complete Consultation</button>
+                </li>
+            </ul>
+            
+            <div class="tab-content" id="consultationTabsContent">
+                <!-- Update Status Tab -->
+                <div class="tab-pane fade show active" id="update-tab-pane" role="tabpanel" aria-labelledby="update-tab" tabindex="0">
+                    <div class="card">
+                        <div class="card-header bg-warning">
+                            <h5 class="mb-0">Update Consultation Status</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" novalidate>
+                                {% csrf_token %}
+                                
+                                <div class="mb-4">
+                                    {{ form.status|as_crispy_field }}
+                                </div>
+                                
+                                <div class="mb-4">
+                                    {{ form.notes|as_crispy_field }}
+                                </div>
+                                
+                                <div class="d-flex justify-content-between">
+                                    <a href="{% url 'consultations:detail' consultation.id %}" class="btn btn-secondary">Cancel</a>
+                                    <button type="submit" class="btn btn-warning">
+                                        <i class="fas fa-save me-1"></i> Update Status
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Complete Consultation Tab -->
+                <div class="tab-pane fade" id="complete-tab-pane" role="tabpanel" aria-labelledby="complete-tab" tabindex="0">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">Complete Consultation</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Complete the consultation by providing a diagnosis and recommendations.
+                            </div>
+                            
+                            <form method="post" novalidate>
+                                {% csrf_token %}
+                                <input type="hidden" name="complete" value="true">
+                                
+                                <div class="mb-4">
+                                    {{ complete_form.diagnosis|as_crispy_field }}
+                                </div>
+                                
+                                <div class="mb-4">
+                                    {{ complete_form.recommendations|as_crispy_field }}
+                                </div>
+                                
+                                <div class="mb-4">
+                                    {{ complete_form.notes|as_crispy_field }}
+                                </div>
+                                
+                                <div class="d-flex justify-content-between">
+                                    <a href="{% url 'consultations:detail' consultation.id %}" class="btn btn-secondary">Cancel</a>
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-check-circle me-1"></i> Complete Consultation
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

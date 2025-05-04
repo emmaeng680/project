@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% load crispy_forms_tags %}
+
+{% block title %}Register | Mobile Stroke Unit{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const roleRadios = document.querySelectorAll('input[name="role"]');
+        const technicianFields = document.getElementById('technician-fields');
+        const neurologistFields = document.getElementById('neurologist-fields');
+        const patientFields = document.getElementById('patient-fields');
+        
+        function updateFields() {
+            const selectedRole = document.querySelector('input[name="role"]:checked')?.value;
+            
+            // Hide all role-specific fields first
+            if (technicianFields) technicianFields.style.display = 'none';
+            if (neurologistFields) neurologistFields.style.display = 'none';
+            if (patientFields) patientFields.style.display = 'none';
+            
+            // Show fields based on selected role
+            if (selectedRole === 'TECHNICIAN' && technicianFields) {
+                technicianFields.style.display = 'block';
+            } else if (selectedRole === 'NEUROLOGIST' && neurologistFields) {
+                neurologistFields.style.display = 'block';
+            } else if (selectedRole === 'PATIENT' && patientFields) {
+                patientFields.style.display = 'block';
+            }
+        }
+        
+        // Add event listeners to all role radio buttons
+        roleRadios.forEach(radio => {
+            radio.addEventListener('change', updateFields);
+        });
+        
+        // Initial call to set the correct state
+        updateFields();
+    });
+</script>
+{% endblock %}
+
+{% block content_full %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0 text-center">Register for Mobile Stroke Unit System</h4>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    <h5 class="mb-3">Account Information</h5>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            {{ user_form.username|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ user_form.email|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            {{ user_form.first_name|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ user_form.last_name|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        {{ user_form.phone_number|as_crispy_field }}
+                    </div>
+                    
+                    <h5 class="mb-3">Select Role</h5>
+                    <div class="mb-4">
+                        {{ user_form.role|as_crispy_field }}
+                    </div>
+                    
+                    <!-- Technician-specific fields -->
+                    <div id="technician-fields" style="display: none;">
+                        <h5 class="mb-3">Technician Information</h5>
+                        <div class="card mb-4 border-info">
+                            <div class="card-body">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        {{ technician_form.license_number|as_crispy_field }}
+                                    </div>
+                                    <div class="col-md-6">
+                                        {{ technician_form.certification|as_crispy_field }}
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    {{ technician_form.unit_number|as_crispy_field }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Neurologist-specific fields -->
+                    <div id="neurologist-fields" style="display: none;">
+                        <h5 class="mb-3">Neurologist Information</h5>
+                        <div class="card mb-4 border-warning">
+                            <div class="card-body">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        {{ neurologist_form.medical_license|as_crispy_field }}
+                                    </div>
+                                    <div class="col-md-6">
+                                        {{ neurologist_form.specialty|as_crispy_field }}
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    {{ neurologist_form.years_of_experience|as_crispy_field }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Patient-specific fields -->
+                    <div id="patient-fields" style="display: none;">
+                        <h5 class="mb-3">Patient Information</h5>
+                        <div class="card mb-4 border-success">
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    {{ patient_form.date_of_birth|as_crispy_field }}
+                                </div>
+                                <div class="mb-3">
+                                    {{ patient_form.medical_history|as_crispy_field }}
+                                </div>
+                                <div class="mb-3">
+                                    {{ patient_form.current_medications|as_crispy_field }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h5 class="mb-3">Set Password</h5>
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            {{ user_form.password1|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ user_form.password2|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">Register</button>
+                    </div>
+                </form>
+            </div>
+            <div class="card-footer text-center">
+                <p class="mb-0">Already have an account? <a href="{% url 'login' %}">Login here</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

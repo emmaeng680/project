@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}NIHSS Assessment Details | Mobile Stroke Unit{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">NIHSS Assessment Details</h1>
+    
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'patients:list' %}">Patients</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'patients:detail' patient.id %}">{{ patient.first_name }} {{ patient.last_name }}</a></li>
+            <li class="breadcrumb-item active">NIHSS Details</li>
+        </ol>
+    </nav>
+    
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Assessment Overview</h5>
+                <div>
+                    <span class="badge bg-{{ severity_class }} fs-6">{{ severity }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Patient:</strong> {{ patient.first_name }} {{ patient.last_name }}</p>
+                    <p><strong>Date of Birth:</strong> {{ patient.date_of_birth|date:"M d, Y" }}</p>
+                    <p><strong>Gender:</strong> {{ patient.get_gender_display }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Assessment Date:</strong> {{ assessment.assessed_at|date:"M d, Y H:i" }}</p>
+                    <p><strong>Assessed By:</strong> {{ assessment.assessed_by.get_full_name }}</p>
+                    <p><strong>Total NIHSS Score:</strong> <span class="badge bg-{{ severity_class }}">{{ total_score }}</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card mb-4">
+        <div class="card-header bg-warning">
+            <h5 class="mb-0">NIHSS Assessment Results</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <h5>Level of Consciousness</h5>
+                    <table class="table table-bordered">
+                        <tr>
+                            <td>Consciousness Level</td>
+                            <td>{{ assessment.get_loc_display }}</td>
+                        </tr>
+                        <tr>
+                            <td>LOC Questions</td>
+                            <td>{{ assessment.get_loc_questions_display }}</td>
+                        </tr>
+                        <tr>
+                            <td>LOC Commands</td>
+                            <td>{{ assessment.get_loc_commands_display }}</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="col-md-4 mb-4">
+                    <h5>Cranial Nerve Function</h5>
+                    <table class="table table-bordered">
+                        <tr>
+                            <td>Gaze</td>
+                            <td>{{ assessment.get_gaze_display }}</td>
+                        </tr>
+                        <tr>
+                            <td>Visual Fields</td>
+                            <td>{{ assessment.get_visual_fields_display }}</td>
+                        </tr>
+                        <tr>
+                            <td>Facial Palsy</td>
+                            <td>{{ assessment.get_facial_palsy_display }}</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="col-md-4 mb-4">
+                    <h5>Motor Function - Arms</h5>
+                    <table class="table table-bordered">
+                        <tr>
+                            <td>Left Arm</td>
+                            <td>{{ assessment.get_motor_arm_left_display }}</td>
+                        </tr>
+                        <tr>
+                            <td>Right Arm</td>
+                            <td>{{ assessment.get_motor_arm_right_display }}</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="col-md-4 mb-4">
+                    <h5>Motor Function - Legs</h5>
+                    <table class="table table-bordered">
+                        <tr>
+                            <td>Left Leg</td>
+                            <td>{{ assessment.get_motor_leg_left_display }}</td>
+                        </tr>
+                        <tr>
+                            <td>Right Leg</td>
+                            <td>{{ assessment.get_motor_leg_right_display }}</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="col-md-4 mb-4">
+                    <h5>Coordination & Sensory</h5>
+                    <table class="table table-bordered">
+                        <tr>
+                            <td>Ataxia</td>
+                            <td>{{ assessment.get_ataxia_display }}</td>
+                        </tr>
+                        <tr>
+                            <td>Sensory</td>
+                            <td>{{ assessment.get_sensory_display }}</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="col-md-4 mb-4">
+                    <h5>Language & Neglect</h5>
+                    <table class="table table-bordered">
+                        <tr>
+                            <td>Language</td>
+                            <td>{{ assessment.get_language_display }}</td>
+                        </tr>
+                        <tr>
+                            <td>Dysarthria</td>
+                            <td>{{ assessment.get_dysarthria_display }}</td>
+                        </tr>
+                        <tr>
+                            <td>Extinction</td>
+                            <td>{{ assessment.get_extinction_display }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            
+            {% if assessment.notes %}
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card bg-light">
+                            <div class="card-header">
+                                <h5 class="mb-0">Assessment Notes</h5>
+                            </div>
+                            <div class="card-body">
+                                <p>{{ assessment.notes|linebreaksbr }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="d-flex justify-content-between">
+        <a href="{% url 'patients:detail' patient.id %}" class="btn btn-primary">Back to Patient Details</a>
+        <a href="#" class="btn btn-outline-primary" onclick="window.print()">
+            <i class="fas fa-print me-2"></i>Print Assessment
+        </a>
+    </div>
+</div>
+{% endblock %}

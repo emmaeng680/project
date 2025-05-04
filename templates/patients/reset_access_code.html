@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Reset Patient Access Code | Mobile Stroke Unit{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'patients:list' %}">Patients</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'patients:detail' patient_id=patient.id %}">{{ patient.get_full_name }}</a></li>
+            <li class="breadcrumb-item active">Reset Access Code</li>
+        </ol>
+    </nav>
+
+    <div class="card">
+        <div class="card-header bg-warning">
+            <h5 class="mb-0">Reset Patient Access Code</h5>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-warning">
+                <h5 class="alert-heading">Warning!</h5>
+                <p>You are about to reset the access code for <strong>{{ patient.get_full_name }}</strong>.</p>
+                <p>The current access code <strong>{{ patient.access_code }}</strong> will no longer work.</p>
+                <hr>
+                <p class="mb-0">A new code will be generated, and you must provide this code to the patient.</p>
+            </div>
+            
+            <form method="post">
+                {% csrf_token %}
+                {{ form|crispy }}
+                
+                <div class="d-flex justify-content-between mt-3">
+                    <a href="{% url 'patients:detail' patient_id=patient.id %}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-warning">Reset Access Code</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

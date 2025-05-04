@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications | Mobile Stroke Unit{% endblock %}
+
+{% block sidebar_content %}
+<div class="list-group">
+    <a href="{% url 'consultations:technician_dashboard' %}" class="list-group-item list-group-item-action">
+        <i class="fas fa-chart-line me-2"></i>Dashboard
+    </a>
+    <a href="{% url 'patients:list' %}" class="list-group-item list-group-item-action">
+        <i class="fas fa-users me-2"></i>Patient List
+    </a>
+    <a href="{% url 'patients:register_patient' %}" class="list-group-item list-group-item-action">
+        <i class="fas fa-user-plus me-2"></i>New Patient
+    </a>
+    <a href="{% url 'consultations:notifications' %}" class="list-group-item list-group-item-action active">
+        <i class="fas fa-bell me-2"></i>Notifications
+    </a>
+    <a href="{% url 'accounts:profile' %}" class="list-group-item list-group-item-action">
+        <i class="fas fa-user me-2"></i>My Profile
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Notifications</h1>
+    
+    {% if notifications %}
+    <div>
+        <a href="{% url 'consultations:notifications' %}?mark_all_read=1" class="btn btn-outline-secondary">
+            <i class="fas fa-check-double me-2"></i>Mark All as Read
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+
+{% if unread_count > 0 %}
+<div class="alert alert-info">
+    <i class="fas fa-info-circle me-2"></i>You have {{ unread_count }} unread notification{{ unread_count|pluralize }}.
+</div>
+{% endif %}
+
+{% if notifications %}
+<div class="card">
+    <div class="card-body p-0">
+        <div class="list-group list-group-flush">
+            {% for notification in notifications %}
+                <div class="list-group-item {% if not notification.is_read %}list-group-item-light{% endif %}">
+                    <div class="d-flex w-100 justify-content-between align-items-center">
+                        <h5 class="mb-1">
+                            {% if notification.notification_type == 'CONSULTATION' %}
+                                <span class="badge bg-primary me-2">Consultation</span>
+                            {% elif notification.notification_type == 'TPA' %}
+                                <span class="badge bg-danger me-2">tPA</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark me-2">System</span>
+                            {% endif %}
+                            {{ notification.title }}
+                            {% if not notification.is_read %}
+                                <span class="badge bg-danger ms-2">New</span>
+                            {% endif %}
+                        </h5>
+                        <small>{{ notification.created_at|date:"M d, Y H:i" }}</small>
+                    </div>
+                    <p class="mb-1">{{ notification.message }}</p>
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <div>
+                            {% if notification.created_at|timesince != '0 minutes' %}
+                                <small class="text-muted">{{ notification.created_at|timesince }} ago</small>
+                            {% else %}
+                                <small class="text-muted">Just now</small>
+                            {% endif %}
+                        </div>
+                        <div>
+                            {% if notification.related_consultation %}
+                                <a href="{% url 'consultations:detail' consultation_id=notification.related_consultation.id %}" class="btn btn-sm btn-outline-primary">
+                                    View Consultation
+                                </a>
+                            {% endif %}
+                            
+                            {% if notification.related_tpa_request %}
+                                <a href="{% url 'consultations:detail' consultation_id=notification.related_tpa_request.consultation.id %}" class="btn btn-sm btn-outline-danger">
+                                    View tPA Request
+                                </a>
+                            {% endif %}
+                            
+                            {% if notification.related_url %}
+                                <a href="{% url 'consultations:notifications' %}?view={{ notification.id }}" class="btn btn-sm btn-outline-secondary">
+                                    <i class="fas fa-external-link-alt me-1"></i>View Details
+                                </a>
+                            {% endif %}
+                            
+                            {% if not notification.is_read %}
+                                <a href="{% url 'consultations:notifications' %}?mark_read={{ notification.id }}" 
+                                   class="btn btn-sm btn-outline-secondary">
+                                    <i class="fas fa-check me-1"></i>Mark as Read
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{% else %}
+<div class="alert alert-info text-center py-5">
+    <i class="fas fa-check-circle fa-3x mb-3"></i>
+    <h5>No notifications</h5>
+    <p>You don't have any notifications at this time.</p>
+</div>
+{% endif %}
+{% endblock %}

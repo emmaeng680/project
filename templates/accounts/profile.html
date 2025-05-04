@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% load crispy_forms_tags %}
+
+{% block title %}Profile | Mobile Stroke Unit{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Your Profile</h4>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    <h5 class="mb-3">Account Information</h5>
+                    
+                    {{ form|crispy }}
+                    
+                    {% if role_profile %}
+                        <h5 class="mt-4 mb-3">
+                            {% if user.is_technician %}
+                                Technician Information
+                            {% elif user.is_neurologist %}
+                                Neurologist Information
+                            {% elif user.is_patient %}
+                                Patient Information
+                            {% endif %}
+                        </h5>
+                        
+                        {% if user.is_technician %}
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>License Number:</strong> {{ role_profile.license_number }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Certification:</strong> {{ role_profile.certification }}</p>
+                                </div>
+                            </div>
+                            <p><strong>Unit Number:</strong> {{ role_profile.unit_number }}</p>
+                        {% elif user.is_neurologist %}
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Medical License:</strong> {{ role_profile.medical_license }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Specialty:</strong> {{ role_profile.specialty }}</p>
+                                </div>
+                            </div>
+                            <p><strong>Years of Experience:</strong> {{ role_profile.years_of_experience }}</p>
+                        {% elif user.is_patient %}
+                            <p><strong>Date of Birth:</strong> {{ role_profile.date_of_birth }}</p>
+                            <p><strong>Medical History:</strong> {{ role_profile.medical_history }}</p>
+                            <p><strong>Current Medications:</strong> {{ role_profile.current_medications }}</p>
+                        {% endif %}
+                    {% endif %}
+                    
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary">Update Profile</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
